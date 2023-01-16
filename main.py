@@ -26,6 +26,7 @@ def sawtooth_gen(amplitude, frequency, points):
 
 
 def combine_signals(signal_a, signal_b):
+    output = []
     signal_b = np.flip(signal_b)
     len_b = len(signal_b)
     diff = len(signal_a) - len(signal_b)
@@ -36,9 +37,7 @@ def combine_signals(signal_a, signal_b):
     for i in range(0, 2 * len_b):
         signal_a = np.append(signal_a, np.nan)
 
-    signal_a = np.roll(signal_a, 2)
-    print("a", signal_a)
-    print("b", signal_b)
+    signal_a = np.roll(signal_a, len_b)
 
     for i in range(0, len(signal_a) - len_b):
         new = signal_a[i:i + len(signal_b)]
@@ -51,17 +50,19 @@ def combine_signals(signal_a, signal_b):
                     value = 0
                 value += new[i] * signal_b[i]
         if not np.isnan(value):
-            print(value)
+            output.append(value)
+    output = np.asarray(output)
+    return output
 
 
 sinus_signal = sin_gen(1, 2, 0, 1000)
 square_signal = rect_gen(4, 4, 1000)
 
-a = np.array([1, 2, 3])
-b = np.array([1, 2])
+a = np.array([1, 4, 2, 5, 6])
+b = np.array([3,4,1, 2])
 
 print(np.convolve(a, b))
-combine_signals(a, b)
+print(combine_signals(a, b))
 
 #
 # plt.plot(np.arange(0, 1000), actual_signal)
