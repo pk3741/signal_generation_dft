@@ -1,9 +1,12 @@
-import math
-from tkinter import Tk
-import numpy as np
-from scipy.ndimage import shift
-from matplotlib import pyplot as plt
 import cmath
+import math
+import tkinter
+from tkinter import *
+
+import numpy as np
+from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 
 def sin_gen(amplitude, frequency, phase, points):
@@ -56,7 +59,6 @@ def combine_signals(signal_a, signal_b):
     output = np.asarray(output)
     return output
 
-
 def blackman_window(samples):
     n = samples
     windowed = np.zeros(n)
@@ -93,23 +95,163 @@ def dft(data):
     pts = len(data)
     out = np.ndarray(pts, dtype=np.complex128)
     for n in range(0, pts, 1):
-        output = complex(0,0)
+        output = complex(0, 0)
         for k in range(0, pts, 1):
-            output += data[k] * cmath.exp(-1j*k*n*2*math.pi/pts)
-        out[n]=output
+            output += data[k] * cmath.exp(-1j * k * n * 2 * math.pi / pts)
+        out[n] = output
     return out
 
 
-sinus_signal = sin_gen(1,1 ,0,128)
-sinus_dft = dft(sinus_signal)
-test = np.fft.fft(sinus_signal, n=128, axis=0)
+class Application(tkinter.Frame):
+    def __init__(self, master=None):
+        tkinter.Frame.__init__(self, master)
+        root.geometry("800x900")
+        self.data = []
+        self.createWidgets()
+        self.fig = Figure(figsize=(5, 5), dpi=100)
+        self.plot1 = 0
+        self.canvas = FigureCanvasTkAgg(self.fig,
+                                        master=root)
+        self.canvas.get_tk_widget().grid(column=0, columnspan=9, row=9, sticky=tkinter.S)
 
-fig, axs = plt.subplots(2)
-axs[0].plot(np.arange(0, 128), abs(test))
-axs[1].plot(np.arange(0, 128), abs(sinus_dft))
-plt.show()
+    def createWidgets(self):
+        root.columnconfigure(0, weight=1)
+        root.columnconfigure(1, weight=1)
+        root.columnconfigure(2, weight=1)
+        root.columnconfigure(3, weight=1)
+        root.columnconfigure(4, weight=1)
+        root.columnconfigure(5, weight=1)
+        root.columnconfigure(6, weight=1)
+        root.columnconfigure(7, weight=1)
+        root.columnconfigure(8, weight=1)
 
-# root = Tk()
-# root.title('Signal generator')
-# root.geometry("800x450")
-# root.mainloop()
+        label1 = Label(root, text='Amplitude:')
+        label1.grid(column=0, row=0, sticky=tkinter.W)
+
+        amplitude = Text(root, height=1, width=10)
+        amplitude.insert("1.0", "1")
+        amplitude.grid(column=1, row=0, sticky=tkinter.W)
+
+        label2 = Label(root, text='Frequency:')
+        label2.grid(column=2, row=0, sticky=tkinter.W)
+
+        freq = Text(root, height=1, width=10)
+        freq.insert("1.0", "1")
+        freq.grid(column=3, row=0, sticky=tkinter.W)
+
+        label3 = Label(root, text='Phase:')
+        label3.grid(column=4, row=0, sticky=tkinter.W)
+
+        phase = Text(root, height=1, width=10)
+        phase.insert("1.0", "1")
+        phase.grid(column=5, row=0, sticky=tkinter.W)
+
+        label4 = Label(root, text='Steps:')
+        label4.grid(column=6, row=0, sticky=tkinter.W)
+
+        steps = Text(root, height=1, width=10)
+        steps.insert("1.0", "32")
+        steps.grid(column=7, row=0, sticky=tkinter.W)
+
+        # self.plot_button = Button(master=root,
+        #                           command=lambda: self.plot(),
+        #                           height=2,
+        #                           width=10,
+        #                           text="Plot", )
+        # self.plot_button.grid(column=0, row=4, sticky=tkinter.W)
+
+        self.plot_button2 = Button(master=root,
+                                   command=lambda: self.add_data(
+                                       sin_gen(float(amplitude.get('1.0', 'end')), float(freq.get('1.0', 'end')),
+                                               float(phase.get('1.0', 'end')), int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Add sinus")
+        self.plot_button2.grid(column=0, row=1, sticky=tkinter.NW)
+
+        self.plot_button3 = Button(master=root,
+                                   command=lambda: self.add_data(
+                                       rect_gen(float(amplitude.get('1.0', 'end')), float(freq.get('1.0', 'end')),
+                                                int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Add rect")
+        self.plot_button3.grid(column=1, row=1, sticky=tkinter.NW)
+
+        self.plot_button4 = Button(master=root,
+                                   command=lambda: self.add_data(
+                                       sawtooth_gen(float(amplitude.get('1.0', 'end')), float(freq.get('1.0', 'end')),
+                                               int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Add sawtooth")
+        self.plot_button4.grid(column=2, row=1, sticky=tkinter.NW)
+
+        self.plot_button5 = Button(master=root,
+                                   command=lambda: self.add_window(blackman_window(int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Blackman")
+        self.plot_button5.grid(column=0, row=2, sticky=tkinter.NW)
+
+        self.plot_button6 = Button(master=root,
+                                   command=lambda: self.add_window(hanning_window(int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Hanning")
+        self.plot_button6.grid(column=1, row=2, sticky=tkinter.NW)
+
+        self.plot_button7 = Button(master=root,
+                                   command=lambda: self.add_window(hamming_window(int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Hamming")
+        self.plot_button7.grid(column=2, row=2, sticky=tkinter.NW)
+
+        self.plot_button8 = Button(master=root,
+                                   command=lambda: self.add_window(bartlett_window(int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Bartlett")
+        self.plot_button8.grid(column=3, row=2, sticky=tkinter.NW)
+
+        self.plot_button9 = Button(master=root,
+                                   command=lambda: self.clearplot(),
+                                   height=2,
+                                   width=10,
+                                   text="Clear")
+        self.plot_button9.grid(column=0, row=9, sticky=tkinter.NW)
+
+    # def plot(self):
+    #     self.fig.clear()
+    #     self.plot1 = self.fig.add_subplot(111).plot(self.data)
+    #     self.canvas.draw()
+
+    def clearplot(self):
+        self.data = []
+        self.fig.clear()
+        self.plot1 = self.fig.add_subplot(111).plot(self.data)
+        self.canvas.draw()
+
+    def replot(self):
+        self.fig.clear()
+        self.plot1 = self.fig.add_subplot(111).plot(self.data)
+        self.canvas.draw()
+
+    def add_data(self, newdata):
+        if len(self.data)==0:
+            for i in range(0, len(newdata)):
+                self.data.append(newdata[i])
+        else:
+            for i in range(0, len(self.data)):
+                self.data[i]=self.data[i]+newdata[i]
+        self.replot()
+
+    def add_window(self, window):
+        for i in range(0, len(self.data)):
+            self.data[i]*=window[i]
+        self.replot()
+
+root = tkinter.Tk()
+app = Application(master=root)
+app.mainloop()
