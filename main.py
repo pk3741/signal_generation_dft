@@ -26,6 +26,9 @@ def sawtooth_gen(amplitude, frequency, points):
 
 
 def combine_signals(signal_a, signal_b):
+    """
+    TODO: REWRITE IN BETTER WAY
+    """
     output = []
     signal_b = np.flip(signal_b)
     len_b = len(signal_b)
@@ -42,8 +45,6 @@ def combine_signals(signal_a, signal_b):
     for i in range(0, len(signal_a) - len_b):
         new = signal_a[i:i + len(signal_b)]
         value = np.nan
-
-        value = np.nan
         for i in range(0, len(new)):
             if not np.isnan(new[i]) and not np.isnan(signal_b[i]):
                 if np.isnan(value):
@@ -55,18 +56,49 @@ def combine_signals(signal_a, signal_b):
     return output
 
 
+def blackman_window(samples):
+    n=samples
+    windowed = np.zeros(n)
+    for i in np.arange(0, n):
+        windowed[i] = 0.42 - 0.5 * math.cos((2*math.pi*i)/n) + 0.08 * math.cos((4*math.pi*i)/n)
+    return windowed
+
+
+def hanning_window(samples):
+    n = samples
+    windowed = np.zeros(n)
+    for i in np.arange(0, n):
+        windowed[i] = 0.5 - 0.5 * math.cos((2 * math.pi * i) / n)
+    return windowed
+
+
+def hamming_window(samples):
+    n = samples
+    windowed = np.zeros(n)
+    for i in np.arange(0, n):
+        windowed[i] = 0.54 - 0.46 * math.cos((2 * math.pi * i) / n)
+    return windowed
+
+
+def bartlett_window(samples):
+    n = samples
+    windowed = np.zeros(n)
+    for i in np.arange(0, n):
+        windowed[i] = (2/(n-1)) * (((n-1)/2) - abs(i - ((n-1)/2)))
+    return windowed
+
+
+
 sinus_signal = sin_gen(1, 2, 0, 1000)
-square_signal = rect_gen(4, 4, 1000)
-
-a = np.array([1, 4, 2, 5, 6])
-b = np.array([3,4,1, 2])
-
-print(np.convolve(a, b))
-print(combine_signals(a, b))
+hanning = bartlett_window(51)
+hanning_org = np.bartlett(51)
 
 #
-# plt.plot(np.arange(0, 1000), actual_signal)
-# plt.show()
+fig, axs = plt.subplots(2, sharex=True, sharey=True)
+axs[0].plot(np.arange(0,51), hanning)
+axs[1].plot(np.arange(0, 51), hanning_org)
+
+plt.show()
 
 # root = Tk()
 # root.title('Signal generator')
