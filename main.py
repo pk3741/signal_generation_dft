@@ -105,6 +105,7 @@ def dft(data):
 class Application(tkinter.Frame):
     def __init__(self, master=None):
         tkinter.Frame.__init__(self, master)
+        root.title("Wave generation tool")
         root.geometry("800x900")
         self.data = []
         self.createWidgets()
@@ -143,14 +144,14 @@ class Application(tkinter.Frame):
         label3.grid(column=4, row=0, sticky=tkinter.W)
 
         phase = Text(root, height=1, width=10)
-        phase.insert("1.0", "1")
+        phase.insert("1.0", "0")
         phase.grid(column=5, row=0, sticky=tkinter.W)
 
         label4 = Label(root, text='Steps:')
         label4.grid(column=6, row=0, sticky=tkinter.W)
 
-        steps = Text(root, height=1, width=10)
-        steps.insert("1.0", "32")
+        steps = Text(root, height=1, width=11)
+        steps.insert("1.0", "256")
         steps.grid(column=7, row=0, sticky=tkinter.W)
 
         # self.plot_button = Button(master=root,
@@ -215,12 +216,54 @@ class Application(tkinter.Frame):
                                    text="Bartlett")
         self.plot_button8.grid(column=3, row=2, sticky=tkinter.NW)
 
+
+        self.plot_button9 = Button(master=root,
+                                   command=lambda: self.make_dft(),
+                                   height=2,
+                                   width=10,
+                                   text="DFT")
+        self.plot_button9.grid(column=0, row=7, sticky=tkinter.NW)
+
         self.plot_button9 = Button(master=root,
                                    command=lambda: self.clearplot(),
                                    height=2,
                                    width=10,
                                    text="Clear")
         self.plot_button9.grid(column=0, row=9, sticky=tkinter.NW)
+
+        self.plot_button10 = Button(master=root,
+                                   command=lambda: self.add_conv(
+                                       sin_gen(float(amplitude.get('1.0', 'end')), float(freq.get('1.0', 'end')),
+                                               float(phase.get('1.0', 'end')), int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Conv sin")
+        self.plot_button10.grid(column=5, row=1, sticky=tkinter.NW)
+
+        self.plot_button11 = Button(master=root,
+                                   command=lambda: self.add_conv(
+                                       rect_gen(float(amplitude.get('1.0', 'end')), float(freq.get('1.0', 'end')),
+                                                int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=10,
+                                   text="Conv rect")
+        self.plot_button11.grid(column=6, row=1, sticky=tkinter.NW)
+
+        self.plot_button12 = Button(master=root,
+                                   command=lambda: self.add_conv(
+                                       sawtooth_gen(float(amplitude.get('1.0', 'end')), float(freq.get('1.0', 'end')),
+                                                    int(steps.get('1.0', 'end')))),
+                                   height=2,
+                                   width=12,
+                                   text="Conv sawtooth")
+        self.plot_button12.grid(column=7, row=1, sticky=tkinter.NW)
+
+        self.plot_button13 = Button(master=root,
+                                    command=lambda: self.spectrum(freq, steps),
+                                    height=2,
+                                    width=10,
+                                    text="Spectrum")
+        self.plot_button13.grid(column=0, row=8, sticky=tkinter.NW)
 
     # def plot(self):
     #     self.fig.clear()
@@ -238,6 +281,11 @@ class Application(tkinter.Frame):
         self.plot1 = self.fig.add_subplot(111).plot(self.data)
         self.canvas.draw()
 
+    def replot_spectrum(self, x, y):
+        self.fig.clear()
+        self.plot1 = self.fig.add_subplot(111).plot(x, y)
+        self.canvas.draw()
+
     def add_data(self, newdata):
         if len(self.data)==0:
             for i in range(0, len(newdata)):
@@ -251,6 +299,19 @@ class Application(tkinter.Frame):
         for i in range(0, len(self.data)):
             self.data[i]*=window[i]
         self.replot()
+
+    def add_conv(self, conv):
+        self.data = combine_signals(self.data, conv)
+        self.replot()
+
+    def make_dft(self):
+        self.data = abs(dft(self.data))
+        self.replot()
+
+    def spectrum(self, freq, steps):
+        xf = np.fft.fftfreq(int(steps.get('1.0','end')), 1 / float(steps.get('1.0', 'end')))
+        new_data = []
+        self.replot_spectrum(xf, self.data)
 
 root = tkinter.Tk()
 app = Application(master=root)
