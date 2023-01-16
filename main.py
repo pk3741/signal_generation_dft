@@ -3,6 +3,7 @@ from tkinter import Tk
 import numpy as np
 from scipy.ndimage import shift
 from matplotlib import pyplot as plt
+import cmath
 
 
 def sin_gen(amplitude, frequency, phase, points):
@@ -57,10 +58,10 @@ def combine_signals(signal_a, signal_b):
 
 
 def blackman_window(samples):
-    n=samples
+    n = samples
     windowed = np.zeros(n)
     for i in np.arange(0, n):
-        windowed[i] = 0.42 - 0.5 * math.cos((2*math.pi*i)/n) + 0.08 * math.cos((4*math.pi*i)/n)
+        windowed[i] = 0.42 - 0.5 * math.cos((2 * math.pi * i) / n) + 0.08 * math.cos((4 * math.pi * i) / n)
     return windowed
 
 
@@ -84,20 +85,28 @@ def bartlett_window(samples):
     n = samples
     windowed = np.zeros(n)
     for i in np.arange(0, n):
-        windowed[i] = (2/(n-1)) * (((n-1)/2) - abs(i - ((n-1)/2)))
+        windowed[i] = (2 / (n - 1)) * (((n - 1) / 2) - abs(i - ((n - 1) / 2)))
     return windowed
 
 
+def dft(data):
+    pts = len(data)
+    out = np.ndarray(pts, dtype=np.complex128)
+    for n in range(0, pts, 1):
+        output = complex(0,0)
+        for k in range(0, pts, 1):
+            output += data[k] * cmath.exp(-1j*k*n*2*math.pi/pts)
+        out[n]=output
+    return out
 
-sinus_signal = sin_gen(1, 2, 0, 1000)
-hanning = bartlett_window(51)
-hanning_org = np.bartlett(51)
 
-#
-fig, axs = plt.subplots(2, sharex=True, sharey=True)
-axs[0].plot(np.arange(0,51), hanning)
-axs[1].plot(np.arange(0, 51), hanning_org)
+sinus_signal = sin_gen(1,1 ,0,128)
+sinus_dft = dft(sinus_signal)
+test = np.fft.fft(sinus_signal, n=128, axis=0)
 
+fig, axs = plt.subplots(2)
+axs[0].plot(np.arange(0, 128), abs(test))
+axs[1].plot(np.arange(0, 128), abs(sinus_dft))
 plt.show()
 
 # root = Tk()
